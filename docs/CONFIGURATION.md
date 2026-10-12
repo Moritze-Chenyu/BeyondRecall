@@ -102,7 +102,7 @@ all receive exactly the same timestamp-visible source history.
 ### Real framework settings
 
 Install the appropriate bundled Mem0 SDK from `START_HERE.md`; `.[mem0]` supplies
-common dependencies without choosing a variant. Install `.[rag]` for dense/hybrid RAG. A-Mem also needs
+common dependencies without choosing a variant. Install `.[rag]` for dense/hybrid RAG. A-MEM also needs
 `.[amem]` and its external SDK checkout on `PYTHONPATH`; MIRIX needs its SDK and
 a running MIRIX service. Do not install incompatible SDK dependency sets into
 one environment. The dependency files record versions for separate framework environments.
@@ -116,7 +116,7 @@ contain environment variable names, never credentials.
   The adapter creates its own private Qdrant directory, collection and history
   database. JSON contract failures receive bounded repair retries; SDK errors
   that upstream catches internally become explicit evaluation failures.
-- A-Mem: `framework_config.embedding_model`, `metadata_mode` (`simple` or `llm`)
+- A-MEM: `framework_config.embedding_model`, `metadata_mode` (`simple` or `llm`)
   and `evolution_mode: "llm"`. Simple note metadata can be combined with LLM
   evolution and SDK agentic retrieval. Full session text
   and timestamps remain in each note. The SDK's default constructor storage

@@ -98,7 +98,7 @@ def load_mem0_sdk(variant, source_root=None):
         'oss_mainline': ('2.0.2', 'Mem0'),
     }[variant]
     root = (Path(source_root) if source_root else
-            Path(__file__).resolve().parents[2] / 'third_party' / directory).resolve()
+            Path(__file__).resolve().parents[2] / 'frameworks' / directory).resolve()
     metadata = json.loads((root / 'SDK_SOURCE.json').read_text())
     if metadata['version'] != expected_version:
         raise ValueError('Selected Mem0 SDK version does not match the method variant.')

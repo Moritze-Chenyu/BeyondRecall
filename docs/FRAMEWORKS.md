@@ -7,10 +7,10 @@ code, model weights, repository history and private runtime state are excluded.
 
 | Component | Source snapshot | License file | Local changes |
 |---|---|---|---|
-| Mem0 Agentic (Mem0-A) | Legacy non-graph mem0ai 1.0.6 installed SDK | [LICENSE](../third_party/Mem0-Agentic/LICENSE) | JSON-response reminder in OpenAI SDK wrapper |
-| Mem0 OSS (Mem0-O) | Newer mainline 2.0.2 at 8b11e0787ad3d22efd4a85666d019eaf3e339116 | [LICENSE](../third_party/Mem0/LICENSE) | Five existing local compatibility changes recorded in its patch |
-| A-Mem | ceffb860f0712bbae97b184d440df62bc910ca8d | [LICENSE](../third_party/A-mem/LICENSE) | None in SDK source; adapter fixes live in `frameworks.py` |
-| MIRIX | 51f3342d5366b0e215439581f92e0323227146af | [LICENSE](../third_party/MIRIX/LICENSE) | Six existing compatibility changes, preserved from the tested checkout |
+| Mem0 Agentic (Mem0-A) | Legacy non-graph mem0ai 1.0.6 installed SDK | [LICENSE](../frameworks/Mem0-Agentic/LICENSE) | JSON-response reminder in OpenAI SDK wrapper |
+| Mem0 OSS (Mem0-O) | Newer mainline 2.0.2 at 8b11e0787ad3d22efd4a85666d019eaf3e339116 | [LICENSE](../frameworks/Mem0/LICENSE) | Five existing local compatibility changes recorded in its patch |
+| A-MEM | ceffb860f0712bbae97b184d440df62bc910ca8d | [LICENSE](../frameworks/A-mem/LICENSE) | None in SDK source; adapter fixes live in `frameworks.py` |
+| MIRIX | 51f3342d5366b0e215439581f92e0323227146af | [LICENSE](../frameworks/MIRIX/LICENSE) | Six existing compatibility changes, preserved from the tested checkout |
 
 Each directory has `SDK_SOURCE.json` with source hashes and upstream provenance.
 Changed sources also have `LOCAL_CHANGES.patch`. The legacy Agentic snapshot records the original wheel SHA256

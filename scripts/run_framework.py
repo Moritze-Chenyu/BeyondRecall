@@ -85,7 +85,7 @@ def main():
     parser.add_argument('--mirix-memory-model',default='Qwen/Qwen3.5-27B',help='Memory model used by MIRIX; retained in run configuration.')
     args = parser.parse_args()
     if not args.framework_source and args.profile in {'amem','mirix','mem0_oss','mem0_agentic'}:
-        bundled=PACKAGE/'third_party'/{'amem':'A-mem','mirix':'MIRIX','mem0_oss':'Mem0','mem0_agentic':'Mem0-Agentic'}[args.profile]
+        bundled=PACKAGE/'frameworks'/{'amem':'A-mem','mirix':'MIRIX','mem0_oss':'Mem0','mem0_agentic':'Mem0-Agentic'}[args.profile]
         if bundled.exists():args.framework_source=bundled
     if not 1<=args.workers<=4:
         raise ValueError('Use 1–4 isolated framework workers.')

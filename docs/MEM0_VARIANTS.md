@@ -1,7 +1,7 @@
 # Mem0 Agentic and OSS
 
 In this benchmark, `mem0_agentic` identifies Mem0-A, the legacy **non-graph**
-framework. It does not identify a hosted Mem0 service or A-Mem. `mem0_oss`
+framework. It does not identify a hosted Mem0 service or A-MEM. `mem0_oss`
 identifies Mem0-O, the newer mainline framework. This terminology follows the
 paper and the historical ordinary versus `--oss-mainline` experiment paths.
 
@@ -9,7 +9,7 @@ paper and the historical ordinary versus `--oss-mainline` experiment paths.
 |---|---|---|
 | Profile | `mem0_agentic` | `mem0_oss` |
 | Implementation | `Mem0AgenticSystem` | `Mem0OSSSystem` |
-| Bundled source | `third_party/Mem0-Agentic/` | `third_party/Mem0/` |
+| Bundled source | `frameworks/Mem0-Agentic/` | `frameworks/Mem0/` |
 | SDK | Legacy non-graph 1.0.6 | Newer mainline 2.0.2 with recorded local changes |
 | Extraction | Fact-list extraction | Additive memory-object extraction |
 | Consolidation | ADD / UPDATE / DELETE / NONE decisions | Additive writes with hash deduplication |
@@ -28,7 +28,7 @@ Use its own Python 3.11 environment and run from the repository root:
 
 ```bash
 python -m pip install -r requirements/mem0_mirix.txt
-python -m pip install --no-deps -e third_party/Mem0-Agentic
+python -m pip install --no-deps -e frameworks/Mem0-Agentic
 python -m pip install --no-deps -e .
 test -f .env || cp config/.env.example .env
 # Fill in provider settings in .env before exporting them.
@@ -41,7 +41,7 @@ python scripts/run_framework.py \
   --output-dir results/mem0_agentic --workers 2
 ```
 
-For OSS, install `third_party/Mem0` in a separate environment and use
+For OSS, install `frameworks/Mem0` in a separate environment and use
 `--profile mem0_oss` with a different output directory. The launcher chooses the
 right bundled source automatically, verifies its hashes, and records the source
 version and commit. A different SDK already imported into a process causes a

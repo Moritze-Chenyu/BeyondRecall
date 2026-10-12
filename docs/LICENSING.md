@@ -6,10 +6,10 @@ code or benchmark data as openly licensed until the owner selects a license.
 
 | Material | Scope | Current status |
 |---|---|---|
-| Original evaluator, adapters, scripts, configurations and documentation | Repository-authored contributions outside `third_party/` and `data/` | Owner has not selected an open license |
+| Original evaluator, adapters, scripts, configurations and documentation | Repository-authored contributions outside `frameworks/` and `data/` | Owner has not selected an open license |
 | Original benchmark questions, reference answers and annotations | Only contributions for which the owner can grant rights | Owner has not selected a data license |
 | Conversation text adapted from upstream datasets | Includes retained or adapted source content | Follow the applicable upstream dataset terms; no blanket relicensing |
-| Mem0, A-Mem and MIRIX SDK snapshots | `third_party/`, including retained notices | Existing upstream licenses remain in effect; see `THIRD_PARTY.md` |
+| Mem0, A-MEM and MIRIX SDK snapshots | `frameworks/`, including retained notices | Existing upstream licenses remain in effect; see `FRAMEWORKS.md` |
 | Referenced images, PDFs, videos and audio | Distributed separately, not in this repository | Source-specific rights and redistribution terms remain applicable |
 
 ## Proposed option for owner review
@@ -20,7 +20,7 @@ for original code and documentation, and
 for original benchmark contributions that the owner is authorized to license.
 This proposal has **not** been adopted. An alternative code license is MIT.
 The complete Apache license text is already available in the bundled upstream
-SDK at `third_party/Mem0/LICENSE`; its current grant covers that SDK, not the
+SDK at `frameworks/Mem0/LICENSE`; its current grant covers that SDK, not the
 original Beyond Recall code.
 
 Choosing an original-data license does not automatically establish permission to

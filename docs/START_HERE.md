@@ -4,7 +4,7 @@ See [METHODS.md](METHODS.md) before selecting a profile: some names are
 protocol-only and require external adapters. Mem0 Agentic and OSS both have
 built-in adapters using separate SDKs; see [MEM0_VARIANTS.md](MEM0_VARIANTS.md).
 
-Use Python 3.11 and separate environments for A-Mem and Mem0/MIRIX/RAG.
+Use Python 3.11 and separate environments for A-MEM and Mem0/MIRIX/RAG.
 Commands below run from the repository root. Experimental settings are described
 in the paper; configuration fields are documented in `CONFIGURATION.md`.
 
@@ -13,18 +13,18 @@ in the paper; configuration fields are documented in `CONFIGURATION.md`.
 ```bash
 # Mem0 OSS, MIRIX and dense/hybrid RAG:
 python -m pip install -r requirements/mem0_mirix.txt
-python -m pip install --no-deps -e third_party/Mem0
-python -m pip install --no-deps -e third_party/MIRIX
+python -m pip install --no-deps -e frameworks/Mem0
+python -m pip install --no-deps -e frameworks/MIRIX
 python -m pip install --no-deps -e .
 
 # Mem0 Agentic, in a separate environment:
 python -m pip install -r requirements/mem0_mirix.txt
-python -m pip install --no-deps -e third_party/Mem0-Agentic
+python -m pip install --no-deps -e frameworks/Mem0-Agentic
 python -m pip install --no-deps -e .
 
-# A-Mem, in a separate environment:
+# A-MEM, in a separate environment:
 python -m pip install -r requirements/amem.txt
-python -m pip install --no-deps -e third_party/A-mem
+python -m pip install --no-deps -e frameworks/A-mem
 python -m pip install --no-deps -e .
 ```
 
@@ -112,7 +112,7 @@ and an inference manifest. Inference completion counts are not accuracy scores.
 Start a dedicated MIRIX service:
 
 ```bash
-PYTHONPATH=third_party/MIRIX python scripts/serve_mirix.py \
+PYTHONPATH=frameworks/MIRIX python scripts/serve_mirix.py \
   --port 8540 --state-dir results/mirix_service_state \
   --llm-extra-body '{"enable_thinking":false}' \
   --empty-tool-confirmation --llm-request-timeout 300

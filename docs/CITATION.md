@@ -24,4 +24,4 @@ identifier and URL to both citation files. Record the repository commit used for
 experiments alongside the paper citation.
 
 Citing this paper does not replace license obligations or citations for upstream
-datasets and frameworks. See [THIRD_PARTY.md](THIRD_PARTY.md).
+datasets and frameworks. See [FRAMEWORKS.md](FRAMEWORKS.md).

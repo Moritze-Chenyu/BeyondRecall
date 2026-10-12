@@ -19,8 +19,6 @@ information across long conversations with images, videos and documents.
 - **Fine-grained memory abilities:** 11 tasks across retrieval, reasoning and management.
 - **Multimodal evidence across sessions:** questions draw on images, videos and documents encountered at different times.
 - **Long-term interactions:** 1,163 conversation trajectories, 1,269 QA pairs and 23,775 timestamped sessions.
-- **A shared evaluation interface:** common input preparation and question-level state isolation across supported methods.
-- **Time-aware evaluation:** question timestamps filter available history before memory ingestion.
 
 ## Task Examples
 
@@ -45,7 +43,7 @@ to run an evaluation.
 |---|---|
 | `data/benchmark/` | 11 task files: 1,163 trajectories, 1,269 QA pairs, 23,775 sessions and 345,738 turns |
 | `src/`, `adapters/` | Unified input, temporal filtering, retrieval, answering and judging |
-| `third_party/` | Tested Mem0 OSS, A-Mem and MIRIX runtime source, licenses and compatibility patches |
+| `frameworks/` | Mem0 variants, A-MEM and MIRIX source snapshots, licenses and compatibility patches |
 | `config/`, `examples/` | API/local examples and an environment-based API configuration template |
 | `requirements/`, `environments/` | Dependency versions for separate framework environments |
 | `scripts/` | Dataset assembly, preprocessing, framework inference and service startup |
@@ -55,20 +53,28 @@ to run an evaluation.
 
 ## Methods and inputs
 
-| Profile | Implementation | Representation |
-|---|---|---|
-| `mem0_agentic` | Legacy non-graph Mem0-A: extraction, action-based consolidation and vector retrieval | Text and frozen captions |
-| `mem0_oss` | Newer Mem0-O: additive extraction and entity/lexical/vector retrieval | Text and frozen captions |
-| `amem` | Actual A-Mem SDK notes, evolution and agentic search | Text and frozen captions |
-| `rag_dense`, `rag_hybrid` | FastEmbed retrieval; optional BM25/RRF fusion | Text and frozen captions |
-| `mirix` | Actual MIRIX service with synchronous, isolated writes | Native media fragments and aligned audio transcripts |
-| `full_context_multimodal`, `rag_bm25_native` | Full visible context or BM25-selected complete sessions | Native media |
+| Method | CLI Profile | Memory / Retrieval Mechanism | Input Representation |
+|---|---|---|---|
+| [Mem0](https://arxiv.org/abs/2504.19413) (Mem0-A) | `mem0_agentic` | Legacy non-graph fact extraction and action-based memory consolidation | Text and frozen captions |
+| [Mem0](https://arxiv.org/abs/2504.19413) (Mem0-O) | `mem0_oss` | Mainline additive memory extraction and entity, lexical and vector retrieval | Text and frozen captions |
+| [A-MEM](https://arxiv.org/abs/2502.12110) | `amem` | Agentic note construction, linking, evolution and retrieval | Text and frozen captions |
+| [MIRIX](https://arxiv.org/abs/2507.07957) | `mirix` | Multi-agent multimodal memory | Native media fragments and aligned audio transcripts |
+| RAG-Dense | `rag_dense` | Dense retrieval over sessions | Text and frozen captions |
+| RAG-Hybrid | `rag_hybrid` | Dense retrieval and BM25, fused with reciprocal rank fusion (RRF) | Text and frozen captions |
+| BM25 | `rag_bm25_caption`, `rag_bm25_native` | Lexical retrieval over sessions | Frozen captions or native media, depending on profile |
+| Full-Context Caption | `full_context_caption` | Complete visible conversation history | Text and frozen captions |
+| Full-Context Multimodal | `full_context_multimodal` | Complete visible conversation history | Native media |
+
+Mem0-A and Mem0-O denote the two Mem0 variants evaluated in Beyond Recall;
+they are benchmark-specific variant labels. CLI profiles are configuration
+identifiers, separate from academic method names. RAG and full-context rows
+are evaluation baselines rather than separate memory frameworks.
 
 `mem0_agentic` and `mem0_oss` are distinct built-in methods using separate verified
 SDK snapshots. Run them in separate processes; see [MEM0_VARIANTS.md](docs/MEM0_VARIANTS.md). `multimodal_rag`, `oracle_caption`, `oracle_multimodal`, `text_only_shortcut` and
 `question_only` require external adapters and cannot run with `adapters/builtin.py`.
-See [METHODS.md](docs/METHODS.md) for every profile's implementation status and prerequisites. Third-party snapshots and their changes are described in
-[THIRD_PARTY.md](docs/THIRD_PARTY.md). API and local answer backends share the interface.
+See [METHODS.md](docs/METHODS.md) for every profile's implementation status and prerequisites. Framework source snapshots and local changes are described in
+[Framework Sources](docs/FRAMEWORKS.md). API and local answer backends share the interface.
 
 Question timestamps filter history **before ingestion**. Native videos retain all
 frames and their original audio tracks in stream-copy clips, paired with aligned

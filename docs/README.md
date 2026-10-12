@@ -12,7 +12,7 @@ Run shell commands from the repository root unless stated otherwise.
 | PDF evidence-page selection | [PDF Evidence Policy](PDF_EVIDENCE_POLICY.md) |
 | Paper citation and BibTeX | [Citation](CITATION.md) |
 | Original code and data licensing scope | [Licensing](LICENSING.md) |
-| Bundled SDK sources and licenses | [Third-Party Components](THIRD_PARTY.md) |
+| Bundled SDK sources and licenses | [Framework Sources and Licenses](FRAMEWORKS.md) |
 
 The [dataset](../data/benchmark/README.md) contains conversation histories,
 questions, reference answers and media references. The API template is at
