@@ -85,7 +85,7 @@ def assemble(text_root, media_root, output, mode='copy'):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--text-root', type=Path,
-                        default=PACKAGE / 'data/BeyondRecall_text')
+                        default=PACKAGE / 'data/benchmark')
     parser.add_argument('--media-root', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--mode', choices=['copy', 'hardlink'], default='copy',

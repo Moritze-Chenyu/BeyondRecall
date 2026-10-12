@@ -41,7 +41,7 @@ Embedding models are downloaded on first use unless already cached.
 
 Obtain the matching media release. Its root must contain the `images/` and
 `videos/` paths referenced by the task JSON. Use the source release described by
-`data/BeyondRecall_text/SOURCE_SHA256SUMS`.
+`data/benchmark/SOURCE_SHA256SUMS`.
 
 ```bash
 python scripts/assemble_dataset.py \
@@ -56,9 +56,11 @@ inputs. Native evaluation requires the assembled dataset and matching media.
 
 ## 3. Configure APIs and prepare inputs
 
-Copy `.env.example` to `.env`, fill in the provider settings, and export them:
+Copy `config/.env.example` to `.env`, fill in the provider settings, and export them:
 
 ```bash
+test -f .env || cp config/.env.example .env
+# Fill in provider settings in .env before exporting them.
 set -a
 source .env
 set +a

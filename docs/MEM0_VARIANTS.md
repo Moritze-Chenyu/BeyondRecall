@@ -30,6 +30,8 @@ Use its own Python 3.11 environment and run from the repository root:
 python -m pip install -r requirements/mem0_mirix.txt
 python -m pip install --no-deps -e third_party/Mem0-Agentic
 python -m pip install --no-deps -e .
+test -f .env || cp config/.env.example .env
+# Fill in provider settings in .env before exporting them.
 set -a
 source .env
 set +a

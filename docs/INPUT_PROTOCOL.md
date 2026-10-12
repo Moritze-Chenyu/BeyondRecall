@@ -12,7 +12,7 @@ with source IDs. The current published PDFs were preprocessed using annotated
 evidence pages, first/last pages and optional filler pages up to ten. If mandatory
 pages exceed ten, all mandatory pages remain. Every retained page enters the
 vision boundary at 300 DPI. This revised input differs from older full-PDF runs;
-see `data/BeyondRecall_text/PDF_PREPROCESSING.json` and `PDF_EVIDENCE_POLICY.md`.
+see `data/benchmark/PDF_PREPROCESSING.json` and `PDF_EVIDENCE_POLICY.md`.
 
 Video is split at existing keyframes with stream copy. Every original decoded
 frame and audio packet is preserved; clips can exceed the target ten seconds.

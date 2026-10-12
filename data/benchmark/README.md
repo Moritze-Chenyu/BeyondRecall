@@ -1,4 +1,4 @@
-# Beyond Recall text release
+# Benchmark Dataset
 
 This directory contains the complete benchmark conversation text and QA pairs:
 1,163 trajectories, 1,269 questions, 23,775 sessions and 345,738 turns across

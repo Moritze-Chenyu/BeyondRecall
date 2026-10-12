@@ -15,7 +15,7 @@ it does not claim conference acceptance, a DOI or an existing public preprint.
 }
 ```
 
-[CITATION.cff](CITATION.cff) provides machine-readable citation metadata using
+[CITATION.cff](../CITATION.cff) provides machine-readable citation metadata using
 [Citation File Format 1.2.0](https://citation-file-format.github.io/).
 [CITATION.bib](CITATION.bib) provides the same provisional BibTeX entry.
 Before public release, replace the anonymous author entry with the exact author

@@ -2,11 +2,11 @@
   <img src="assets/readme/beyond_recall_banner.png" alt="Beyond Recall" width="960" />
   <h2>A Fine-Grained Multimodal Benchmark for Long-Term Agent Memory</h2>
   <p>
-    <a href="START_HERE.md">Quick Start</a> &middot;
-    <a href="data/BeyondRecall_text/README.md">Text Dataset</a> &middot;
-    <a href="METHODS.md">Methods</a> &middot;
-    <a href="CONFIGURATION.md">Configuration</a> &middot;
-    <a href="CITATION.md">Citation</a>
+    <a href="docs/START_HERE.md">Quick Start</a> &middot;
+    <a href="data/benchmark/README.md">Dataset</a> &middot;
+    <a href="docs/METHODS.md">Methods</a> &middot;
+    <a href="docs/CONFIGURATION.md">Configuration</a> &middot;
+    <a href="docs/CITATION.md">Citation</a>
   </p>
   <p><strong>11 Tasks</strong> &nbsp; | &nbsp; <strong>3 Memory Dimensions</strong> &nbsp; | &nbsp; <strong>1,269 QA Pairs</strong> &nbsp; | &nbsp; <strong>23,775 Sessions</strong></p>
 </div>
@@ -36,19 +36,21 @@ This repository contains English benchmark text, questions, reference answers,
 timestamps, media references, evaluation and framework source code, environment
 specifications, launch instructions, and the documentation graphics above.
 Benchmark images, videos, PDFs, model weights, credentials, databases and runtime
-logs are distributed separately or generated locally. See [START_HERE.md](START_HERE.md)
+logs are distributed separately or generated locally. See [START_HERE.md](docs/START_HERE.md)
 to run an evaluation.
 
 ## Repository layout
 
 | Directory | Contents |
 |---|---|
-| `data/BeyondRecall_text/` | 11 task files: 1,163 trajectories, 1,269 QA pairs, 23,775 sessions and 345,738 turns |
+| `data/benchmark/` | 11 task files: 1,163 trajectories, 1,269 QA pairs, 23,775 sessions and 345,738 turns |
 | `src/`, `adapters/` | Unified input, temporal filtering, retrieval, answering and judging |
 | `third_party/` | Tested Mem0 OSS, A-Mem and MIRIX runtime source, licenses and compatibility patches |
 | `config/`, `examples/` | API/local examples and an environment-based API configuration template |
 | `requirements/`, `environments/` | Dependency versions for separate framework environments |
 | `scripts/` | Dataset assembly, preprocessing, framework inference and service startup |
+| `docs/` | Launch guides, method details, input policies, citation and licensing notes |
+| `checksums/` | Repository file-integrity manifest |
 | `assets/readme/` | Title artwork and the paper task-example figure for this README |
 
 ## Methods and inputs
@@ -63,10 +65,10 @@ to run an evaluation.
 | `full_context_multimodal`, `rag_bm25_native` | Full visible context or BM25-selected complete sessions | Native media |
 
 `mem0_agentic` and `mem0_oss` are distinct built-in methods using separate verified
-SDK snapshots. Run them in separate processes; see [MEM0_VARIANTS.md](MEM0_VARIANTS.md). `multimodal_rag`, `oracle_caption`, `oracle_multimodal`, `text_only_shortcut` and
+SDK snapshots. Run them in separate processes; see [MEM0_VARIANTS.md](docs/MEM0_VARIANTS.md). `multimodal_rag`, `oracle_caption`, `oracle_multimodal`, `text_only_shortcut` and
 `question_only` require external adapters and cannot run with `adapters/builtin.py`.
-See [METHODS.md](METHODS.md) for every profile's implementation status and prerequisites. Third-party snapshots and their changes are described in
-[THIRD_PARTY.md](THIRD_PARTY.md). API and local answer backends share the interface.
+See [METHODS.md](docs/METHODS.md) for every profile's implementation status and prerequisites. Third-party snapshots and their changes are described in
+[THIRD_PARTY.md](docs/THIRD_PARTY.md). API and local answer backends share the interface.
 
 Question timestamps filter history **before ingestion**. Native videos retain all
 frames and their original audio tracks in stream-copy clips, paired with aligned
@@ -75,33 +77,33 @@ lossless tiles, together with the transcript. Current release PDFs retain all
 annotated evidence pages and boundary pages; every retained page is rendered at
 300 DPI when required by a vision API. The evaluator does not silently remove
 pages, sample frames, or truncate input to resolve capacity errors. Provider-side
-processing remains provider-dependent. Read [INPUT_PROTOCOL.md](INPUT_PROTOCOL.md)
+processing remains provider-dependent. Read [INPUT_PROTOCOL.md](docs/INPUT_PROTOCOL.md)
 for the full contract.
 
 ## Data
 
-The [text release](data/BeyondRecall_text/README.md) preserves the benchmark JSON
+The [text release](data/benchmark/README.md) preserves the benchmark JSON
 records and original media paths. It is not a complete multimodal dataset on its
 own. Download the corresponding media release from Hugging Face and assemble the
 verified dataset before evaluating; the launch guide explains this process.
 A non-Latin character inside a vehicle identifier is Unicode-escaped in the public
 JSON, preserving its exact decoded value.
 
-Experimental settings are described in the paper. See [CONFIGURATION.md](CONFIGURATION.md)
+Experimental settings are described in the paper. See [CONFIGURATION.md](docs/CONFIGURATION.md)
 for configuration fields and supported input modes. Verify the repository file
-inventory with `sha256sum -c SHA256SUMS`.
+inventory with `sha256sum -c checksums/SHA256SUMS`.
 
 ## Citation
 
 Please cite the accompanying paper when using this benchmark or evaluation code.
-See [CITATION.md](CITATION.md), [CITATION.cff](CITATION.cff) and
-[CITATION.bib](CITATION.bib). The current anonymous manuscript citation is
+See [CITATION.md](docs/CITATION.md), [CITATION.cff](CITATION.cff) and
+[CITATION.bib](docs/CITATION.bib). The current anonymous manuscript citation is
 provisional; actual authors and arXiv metadata must be filled in after release.
 
 ## Licensing
 
 The license decision for original code and benchmark contributions is pending.
-[LICENSE](LICENSE) currently records that status; [LICENSING.md](LICENSING.md)
+[LICENSE](LICENSE) currently records that status; [LICENSING.md](docs/LICENSING.md)
 defines the proposed code/data scope. Third-party SDKs retain their own licenses;
 upstream conversation text and separately distributed media are not automatically
 relicensed.

@@ -10,7 +10,7 @@ The published media contains 93 PDFs: 92 were replaced by verified crops and one
 remains original because source evidence annotations are invalid. Forty cropped
 PDFs exceed the ten-page target. Discarded pages are not passed to memory as text
 in this release. Per-file original page mappings and status are recorded in
-`data/BeyondRecall_text/PDF_PREPROCESSING.json`.
+`data/benchmark/PDF_PREPROCESSING.json`.
 
 Selection was fixed during dataset preparation, conservatively using the union
 of source-dataset annotations for each document. The evaluator does not select

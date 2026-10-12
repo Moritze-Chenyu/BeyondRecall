@@ -1,5 +1,5 @@
 cff-version: 1.2.0
-message: "Please cite the accompanying paper when using the benchmark or evaluator. This anonymous citation is provisional; see CITATION.md."
+message: "Please cite the accompanying paper when using the benchmark or evaluator. This anonymous citation is provisional; see docs/CITATION.md."
 type: software
 title: "Beyond Recall: Benchmark Data and Evaluation Code"
 version: "3.4.0"

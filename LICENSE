@@ -3,7 +3,7 @@ LICENSING DECISION PENDING
 The repository owner has not yet selected an open license for the original
 Beyond Recall evaluation code or original benchmark text and annotations.
 This notice is not an open-source license and does not grant additional
-permissions. See LICENSING.md for the proposed scope and pending decision.
+permissions. See docs/LICENSING.md for the proposed scope and pending decision.
 
 Third-party SDKs retain their existing licenses in third_party/*/LICENSE.
 Third-party dataset content and media retain their upstream terms; they are

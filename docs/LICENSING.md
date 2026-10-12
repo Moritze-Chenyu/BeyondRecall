@@ -1,6 +1,6 @@
 # Licensing scope and pending decision
 
-**Status: owner decision pending.** The top-level [LICENSE](LICENSE) is a status
+**Status: owner decision pending.** The top-level [LICENSE](../LICENSE) is a status
 notice, not an approved open license. Do not describe this repository's original
 code or benchmark data as openly licensed until the owner selects a license.
 
