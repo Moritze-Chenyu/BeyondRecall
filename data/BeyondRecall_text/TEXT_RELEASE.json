@@ -1,0 +1,60 @@
+{
+  "scope": "English benchmark conversations, questions, answers, timestamps and media references; media files are distributed separately",
+  "records": 1163,
+  "questions": 1269,
+  "sessions": 23775,
+  "turns": 345738,
+  "task_files": {
+    "management/conflict_detection.json": {
+      "source_sha256": "435156dfee26ef4835118ab412d32800285e93c84d656937dd5f9d376908003b",
+      "text_sha256": "435156dfee26ef4835118ab412d32800285e93c84d656937dd5f9d376908003b"
+    },
+    "management/long_term_semantic_summary.json": {
+      "source_sha256": "feb41621caef1c3dcf053424e293c83cb16de63570ba3edd2d6abca39390b96d",
+      "text_sha256": "feb41621caef1c3dcf053424e293c83cb16de63570ba3edd2d6abca39390b96d"
+    },
+    "management/memory_update.json": {
+      "source_sha256": "d5eacb8a2a0c65461837cdc40eaa48cde4cf61632f0d00f38d652f6696f95f9a",
+      "text_sha256": "d5eacb8a2a0c65461837cdc40eaa48cde4cf61632f0d00f38d652f6696f95f9a"
+    },
+    "management/refusal_to_answer.json": {
+      "source_sha256": "e72ed2343f4a1ec890ad64bf8833663f4817b5b596d22af188568a1978c98c03",
+      "text_sha256": "7c4d1232d03fede065f0777d088cd8d8a9c770db7ef7a84e6841b5a9a8a9a580"
+    },
+    "reasoning/causal_intent_inference.json": {
+      "source_sha256": "8cc708b8e2a4465c41dd699af04387dda8e17f4e29a94f64199b84e4c0ce6b30",
+      "text_sha256": "8cc708b8e2a4465c41dd699af04387dda8e17f4e29a94f64199b84e4c0ce6b30"
+    },
+    "reasoning/cross_modal_relational_reasoning.json": {
+      "source_sha256": "23a38113458435d01f0d34284dc2b20c9ece1c2aa27c01e3735f977b2458da3c",
+      "text_sha256": "23a38113458435d01f0d34284dc2b20c9ece1c2aa27c01e3735f977b2458da3c"
+    },
+    "reasoning/temporal_logic_state_evolution.json": {
+      "source_sha256": "9cf13c37e965f2f9f75f3dbfbe542e3d288942923e5d6c98ccad16ba39c0ecd7",
+      "text_sha256": "9cf13c37e965f2f9f75f3dbfbe542e3d288942923e5d6c98ccad16ba39c0ecd7"
+    },
+    "retrieval/cross_modal_semantic_matching.json": {
+      "source_sha256": "94e7cdb2f88533ee2930eb08c30feaeeaf0bb6390338253de692b5a9b485c015",
+      "text_sha256": "94e7cdb2f88533ee2930eb08c30feaeeaf0bb6390338253de692b5a9b485c015"
+    },
+    "retrieval/high_density_information_extraction.json": {
+      "source_sha256": "6601c710c05342fc16c1e0a93ee723ce0aa72725df17d0f9bbe2cdaba944b26d",
+      "text_sha256": "6601c710c05342fc16c1e0a93ee723ce0aa72725df17d0f9bbe2cdaba944b26d"
+    },
+    "retrieval/property_state_retrieval.json": {
+      "source_sha256": "727b5b6ee15c9c93e62198752fea1e0748085fdffae76d7c9f40db0d2c2bfd4f",
+      "text_sha256": "727b5b6ee15c9c93e62198752fea1e0748085fdffae76d7c9f40db0d2c2bfd4f"
+    },
+    "retrieval/temporal_anchoring.json": {
+      "source_sha256": "e4ce89845f9edbe6d862f37214ccbce4ce25243ea43805037642c538f2c28b22",
+      "text_sha256": "e4ce89845f9edbe6d862f37214ccbce4ce25243ea43805037642c538f2c28b22"
+    }
+  },
+  "json_byte_restorations": {
+    "management/refusal_to_answer.json": {
+      "\\u6caa": 27818
+    }
+  },
+  "restoration_note": "Only literal non-Latin characters inside a vehicle identifier were escaped. Decoded JSON records are identical to the source. Assembly restores the exact source bytes and verifies hashes.",
+  "full_dataset_fingerprint": "27f12c8e8f9b99a435dc7e1525eef0d00f44added1d0a04c612cd1bfbb2bbe23"
+}

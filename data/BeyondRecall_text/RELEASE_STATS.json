@@ -1,0 +1,20 @@
+{
+  "samples": 1163,
+  "questions": 1269,
+  "sessions": 23775,
+  "turns": 345738,
+  "categories": 11,
+  "unique_source_images": 1865,
+  "unique_source_pdfs": 93,
+  "unique_source_videos": 314,
+  "packaged_image_and_document_files": 4471,
+  "packaged_video_files": 338,
+  "pdf_preprocessing": {
+    "replaced_pdf_files": 92,
+    "unchanged_pdf_files": 1,
+    "cropped_pdf_page_limit": 10,
+    "mandatory_evidence_overflow_allowed": true,
+    "mandatory_overflow_pdf_files": 40,
+    "metadata": "PDF_PREPROCESSING.json"
+  }
+}

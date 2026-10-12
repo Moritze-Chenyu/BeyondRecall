@@ -1,0 +1,16 @@
+--- upstream/mem0/llms/openai.py
++++ tested/mem0/llms/openai.py
+@@ -102,6 +102,13 @@
+             json: The generated response.
+         """
+         params = self._get_supported_params(messages=messages, **kwargs)
++
++        if response_format and response_format.get("type") == "json_object":
++            messages = [dict(message) for message in messages]
++            if messages and isinstance(messages[-1].get("content"), str):
++                messages[-1]["content"] += "\n\nPlease respond with valid json only."
++            else:
++                messages.append({"role": "user", "content": "Please respond with valid json only."})
+         
+         params.update({
+             "model": self.config.model,

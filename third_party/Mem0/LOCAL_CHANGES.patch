@@ -1,0 +1,174 @@
+diff --git a/mem0/__init__.py b/mem0/__init__.py
+index 318347ec..20ee1343 100644
+--- a/mem0/__init__.py
++++ b/mem0/__init__.py
+@@ -1,6 +1,9 @@
+ import importlib.metadata
+ 
+-__version__ = importlib.metadata.version("mem0ai")
++try:
++    __version__ = importlib.metadata.version("mem0ai")
++except importlib.metadata.PackageNotFoundError:
++    __version__ = "0.0.0+local"
+ 
+ from mem0.client.main import AsyncMemoryClient, MemoryClient  # noqa
+ from mem0.memory.main import AsyncMemory, Memory  # noqa
+diff --git a/mem0/llms/openai.py b/mem0/llms/openai.py
+index 5be81687..974612cb 100644
+--- a/mem0/llms/openai.py
++++ b/mem0/llms/openai.py
+@@ -1,6 +1,7 @@
+ import json
+ import logging
+ import os
++import time
+ from typing import Dict, List, Optional, Union
+ 
+ from openai import OpenAI
+@@ -137,7 +138,10 @@ class OpenAILLM(LLMBase):
+         if tools:  # TODO: Remove tools if no issues found with new memory addition logic
+             params["tools"] = tools
+             params["tool_choice"] = tool_choice
+-        response = self.client.chat.completions.create(**params)
++        enable_thinking = os.getenv("MEM0_LLM_ENABLE_THINKING")
++        if enable_thinking:
++            params.setdefault("extra_body", {})["enable_thinking"] = enable_thinking.strip().lower() in {"1", "true", "yes", "on"}
++        response = self._create_chat_completion_with_retry(params)
+         parsed_response = self._parse_response(response, tools)
+         if self.config.response_callback:
+             try:
+@@ -147,3 +151,33 @@ class OpenAILLM(LLMBase):
+                 logging.error(f"Error due to callback: {e}")
+                 pass
+         return parsed_response
++
++    @staticmethod
++    def _is_retryable_error(error: Exception) -> bool:
++        status_code = getattr(error, "status_code", None)
++        if status_code in {429, 500, 502, 503, 504}:
++            return True
++        message = str(error).lower()
++        return any(
++            token in message
++            for token in ["429", "rate_limit", "too many requests", "timed out", "temporarily unavailable", "502", "503", "504"]
++        )
++
++    def _create_chat_completion_with_retry(self, params: Dict):
++        max_attempts = int(os.getenv("MEM0_LLM_MAX_RETRIES", "6"))
++        base_delay = float(os.getenv("MEM0_LLM_RETRY_BASE_DELAY", "10"))
++        for attempt in range(max_attempts):
++            try:
++                return self.client.chat.completions.create(**params)
++            except Exception as error:
++                if not self._is_retryable_error(error) or attempt == max_attempts - 1:
++                    raise
++                delay = base_delay * (2**attempt)
++                logging.warning(
++                    "Mem0 LLM retry %s/%s after error: %s. Sleeping %.1fs.",
++                    attempt + 1,
++                    max_attempts,
++                    error,
++                    delay,
++                )
++                time.sleep(delay)
+diff --git a/mem0/memory/main.py b/mem0/memory/main.py
+index ec9dd202..14fd389b 100644
+--- a/mem0/memory/main.py
++++ b/mem0/memory/main.py
+@@ -732,6 +732,7 @@ class Memory(MemoryBase):
+             existing_memories=existing_memories,
+             new_messages=parsed_messages,
+             last_k_messages=last_messages,
++            timestamp=metadata.get("timestamp"),
+             custom_instructions=custom_instr,
+         )
+ 
+@@ -754,10 +755,19 @@ class Memory(MemoryBase):
+                 extracted_memories = []
+             else:
+                 try:
+-                    extracted_memories = json.loads(response, strict=False).get("memory", [])
++                    parsed_response = json.loads(response, strict=False)
++                    if not isinstance(parsed_response, dict):
++                        raise ValueError(f"Expected extraction JSON object, got {type(parsed_response).__name__}")
++                    extracted_memories = parsed_response.get("memory", [])
+                 except json.JSONDecodeError:
+                     extracted_json = extract_json(response)
+-                    extracted_memories = json.loads(extracted_json, strict=False).get("memory", [])
++                    parsed_response = json.loads(extracted_json, strict=False)
++                    if not isinstance(parsed_response, dict):
++                        raise ValueError(f"Expected extraction JSON object, got {type(parsed_response).__name__}")
++                    extracted_memories = parsed_response.get("memory", [])
++                if not isinstance(extracted_memories, list):
++                    raise ValueError("Expected extraction 'memory' field to be a list")
++                extracted_memories = [memory for memory in extracted_memories if isinstance(memory, dict)]
+         except Exception as e:
+             logger.error(f"Error parsing extraction response: {e}")
+             extracted_memories = []
+@@ -2148,6 +2158,7 @@ class AsyncMemory(MemoryBase):
+             existing_memories=existing_memories,
+             new_messages=parsed_messages,
+             last_k_messages=last_messages,
++            timestamp=metadata.get("timestamp"),
+             custom_instructions=custom_instr,
+         )
+ 
+@@ -2171,10 +2182,19 @@ class AsyncMemory(MemoryBase):
+                 extracted_memories = []
+             else:
+                 try:
+-                    extracted_memories = json.loads(response, strict=False).get("memory", [])
++                    parsed_response = json.loads(response, strict=False)
++                    if not isinstance(parsed_response, dict):
++                        raise ValueError(f"Expected extraction JSON object, got {type(parsed_response).__name__}")
++                    extracted_memories = parsed_response.get("memory", [])
+                 except json.JSONDecodeError:
+                     extracted_json = extract_json(response)
+-                    extracted_memories = json.loads(extracted_json, strict=False).get("memory", [])
++                    parsed_response = json.loads(extracted_json, strict=False)
++                    if not isinstance(parsed_response, dict):
++                        raise ValueError(f"Expected extraction JSON object, got {type(parsed_response).__name__}")
++                    extracted_memories = parsed_response.get("memory", [])
++                if not isinstance(extracted_memories, list):
++                    raise ValueError("Expected extraction 'memory' field to be a list")
++                extracted_memories = [memory for memory in extracted_memories if isinstance(memory, dict)]
+         except Exception as e:
+             logger.error(f"Error parsing extraction response (async): {e}")
+             extracted_memories = []
+diff --git a/mem0/memory/utils.py b/mem0/memory/utils.py
+index f03341ef..9ada0512 100644
+--- a/mem0/memory/utils.py
++++ b/mem0/memory/utils.py
+@@ -61,12 +61,11 @@ def ensure_json_instruction(system_prompt, user_prompt):
+ def parse_messages(messages):
+     response = ""
+     for msg in messages:
+-        if msg["role"] == "system":
+-            response += f"system: {msg['content']}\n"
+-        if msg["role"] == "user":
+-            response += f"user: {msg['content']}\n"
+-        if msg["role"] == "assistant":
+-            response += f"assistant: {msg['content']}\n"
++        role = msg.get("role")
++        content = msg.get("content")
++        if role is None or content is None:
++            continue
++        response += f"{role}: {content}\n"
+     return response
+ 
+ 
+@@ -292,4 +291,3 @@ def remove_spaces_from_entities(
+         item["destination"] = item["destination"].lower().replace(" ", "_")
+         cleaned.append(item)
+     return cleaned
+-
+diff --git a/mem0/vector_stores/qdrant.py b/mem0/vector_stores/qdrant.py
+index a4296278..630945b9 100644
+--- a/mem0/vector_stores/qdrant.py
++++ b/mem0/vector_stores/qdrant.py
+@@ -1,3 +1,5 @@
++from __future__ import annotations
++
+ import logging
+ import re
+ from typing import Optional

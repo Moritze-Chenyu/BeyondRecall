@@ -1,0 +1,10 @@
+{
+  "items": {
+    "retrieval/example_task/0/q0": {
+      "required_units": [
+        "turn:3:0",
+        "images/example_task/0.jpg"
+      ]
+    }
+  }
+}

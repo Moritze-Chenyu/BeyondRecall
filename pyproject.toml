@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "beyond-recall-eval"
+version = "3.4.0"
+description = "Framework-agnostic evaluation interface for Beyond Recall"
+requires-python = ">=3.10"
+dependencies = []
+
+[project.optional-dependencies]
+media = ["Pillow>=10", "PyMuPDF>=1.24", "pypdf>=6.20", "openpyxl>=3.1", "av>=12", "imageio-ffmpeg>=0.5", "numpy>=1.26"]
+local = ["torch>=2.4", "transformers>=4.57,<5", "Pillow>=10", "accelerate>=1"]
+mem0 = ["fastembed>=0.7.4", "openai>=1.90", "qdrant-client>=1.12", "pydantic>=2.7.3", "posthog>=4.5", "sqlalchemy>=2.0.31", "pytz>=2024.1", "protobuf>=5.29.6,<7"]
+rag = ["fastembed>=0.7.4", "numpy>=1.26"]
+amem = ["chromadb>=0.5,<1", "sentence-transformers>=3", "litellm", "openai", "jsonschema"]
+
+[project.scripts]
+beyond-recall-eval = "beyond_recall_eval.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]

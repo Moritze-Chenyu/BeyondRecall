@@ -1,0 +1,408 @@
+diff --git a/mirix/agent/agent.py b/mirix/agent/agent.py
+index a0d2a94..60c4a75 100644
+--- a/mirix/agent/agent.py
++++ b/mirix/agent/agent.py
+@@ -759,7 +759,7 @@ class Agent(BaseAgent):
+                         raise ValueError(f"API call returned an empty message: {response}")
+ 
+                     for choice in response.choices:
+-                        if choice.message.content == "" and len(choice.message.tool_calls) == 0:
++                        if choice.message.content == "" and len(choice.message.tool_calls or []) == 0:
+                             raise ValueError(f"API call returned an empty message: {response}")
+ 
+                     if response.choices[0].finish_reason not in [
+diff --git a/mirix/embeddings.py b/mirix/embeddings.py
+index 91835cf..aeb3133 100755
+--- a/mirix/embeddings.py
++++ b/mirix/embeddings.py
+@@ -1,4 +1,6 @@
+ import uuid
++import hashlib
++import math
+ from typing import Any, List, Optional
+ 
+ import numpy as np
+@@ -328,6 +330,39 @@ class EmbeddingEndpoint:
+             return await embedding_with_retry(lambda: self._call_api(text))
+ 
+ 
++class DeterministicEmbedding:
++    """Small local embedding backend for smoke tests and offline flow checks."""
++
++    def __init__(self, dim: int):
++        self.dim = dim
++
++    async def get_text_embedding(self, text: str) -> List[float]:
++        vector = [0.0] * self.dim
++        tokens = text.lower().split() or [text]
++        for token in tokens:
++            digest = hashlib.sha256(token.encode("utf-8")).digest()
++            index = int.from_bytes(digest[:4], "big") % self.dim
++            sign = 1.0 if digest[4] % 2 == 0 else -1.0
++            vector[index] += sign
++        norm = math.sqrt(sum(value * value for value in vector)) or 1.0
++        return [value / norm for value in vector]
++
++
++class FastEmbedEmbedding:
++    """Local FastEmbed backend, used to match the Mem0 benchmark embedder."""
++
++    def __init__(self, model_name: str):
++        from fastembed import TextEmbedding
++
++        self._model = TextEmbedding(model_name=model_name)
++
++    async def get_text_embedding(self, text: str) -> List[float]:
++        embeddings = list(self._model.embed([text]))
++        if not embeddings:
++            return []
++        return embeddings[0].tolist()
++
++
+ class AzureOpenAIEmbedding:
+     def __init__(
+         self,
+@@ -457,6 +492,7 @@ async def embedding_model(config: EmbeddingConfig, user_id: Optional[uuid.UUID]
+ 
+         additional_kwargs = {"user_id": user_id} if user_id else {}
+         model = OpenAIEmbedding(
++            model=config.embedding_model,
+             api_base=config.embedding_endpoint,
+             api_key=api_key,
+             additional_kwargs=additional_kwargs,
+@@ -517,6 +553,10 @@ async def embedding_model(config: EmbeddingConfig, user_id: Optional[uuid.UUID]
+             user=user_id,
+             langfuse_model=config.langfuse_model,
+         )
++    elif endpoint_type == "deterministic":
++        return DeterministicEmbedding(config.embedding_dim)
++    elif endpoint_type == "fastembed":
++        return FastEmbedEmbedding(config.embedding_model)
+     elif endpoint_type == "ollama":
+         model = OllamaEmbeddings(
+             model=config.embedding_model,
+diff --git a/mirix/llm_api/openai_client.py b/mirix/llm_api/openai_client.py
+index e091210..91af1d5 100644
+--- a/mirix/llm_api/openai_client.py
++++ b/mirix/llm_api/openai_client.py
+@@ -145,7 +145,10 @@ class OpenAIClient(LLMClientBase):
+         # TODO(matt) move into LLMConfig
+         # TODO: This vllm checking is very brittle and is a patch at most
+         tool_choice = None
+-        if llm_config.handle and "vllm" in self.llm_config.handle:
++        is_qianfan_endpoint = bool(llm_config.model_endpoint and "qianfan.baidubce.com" in llm_config.model_endpoint)
++        if is_qianfan_endpoint and tools:
++            tool_choice = "auto"
++        elif llm_config.handle and "vllm" in self.llm_config.handle:
+             tool_choice = "auto"  # TODO change to "required" once proxy supports it
+         elif tools:
+             # only set if tools is non-Null
+@@ -180,7 +183,10 @@ class OpenAIClient(LLMClientBase):
+             # When there are no tools, delete tool_choice entirely from the request
+             delattr(data, "tool_choice")
+ 
+-        return data.model_dump(exclude_unset=True)
++        request_data = data.model_dump(exclude_unset=True)
++        if is_qianfan_endpoint and request_data.get("tools"):
++            request_data["parallel_tool_calls"] = False
++        return request_data
+ 
+     async def fill_image_content_in_messages(self, openai_message_list):
+         """
+@@ -226,22 +232,34 @@ class OpenAIClient(LLMClientBase):
+                             }
+                         )
+                         file = await self.file_manager.get_file_metadata_by_id(m["image_id"])
+-                        if file.source_url is not None:
++                        if file.file_path is not None:
++                            image_url = encode_image(file.file_path)
++                            logger.debug(
++                                "Prepared local image for OpenAI request: image_id=%s, bytes=%s, data_url_prefix=%s",
++                                m["image_id"],
++                                len(image_url),
++                                image_url[:30],
++                            )
+                             message_content.append(
+                                 {
+                                     "type": "image_url",
+                                     "image_url": {
+-                                        "url": file.source_url,
++                                        "url": image_url,
+                                         "detail": m["detail"],
+                                     },
+                                 }
+                             )
+-                        elif file.file_path is not None:
++                        elif file.source_url is not None:
++                            logger.debug(
++                                "Prepared remote image for OpenAI request: image_id=%s, source_url_prefix=%s",
++                                m["image_id"],
++                                file.source_url[:80],
++                            )
+                             message_content.append(
+                                 {
+                                     "type": "image_url",
+                                     "image_url": {
+-                                        "url": encode_image(file.file_path),
++                                        "url": file.source_url,
+                                         "detail": m["detail"],
+                                     },
+                                 }
+diff --git a/mirix/schemas/embedding_config.py b/mirix/schemas/embedding_config.py
+index 43a2522..5431051 100755
+--- a/mirix/schemas/embedding_config.py
++++ b/mirix/schemas/embedding_config.py
+@@ -30,6 +30,8 @@ class EmbeddingConfig(BaseModel):
+         "azure",
+         "groq",
+         "ollama",
++        "fastembed",
++        "deterministic",
+         "webui",
+         "webui-legacy",
+         "lmstudio",
+diff --git a/mirix/server/rest_api.py b/mirix/server/rest_api.py
+index 6c7e0b4..8a4f845 100644
+--- a/mirix/server/rest_api.py
++++ b/mirix/server/rest_api.py
+@@ -412,12 +412,7 @@ async def extract_topics_and_temporal_info(
+     """
+     try:
+         if isinstance(messages, list) and "role" in messages[0].keys():
+-            # Convert from OpenAI format to internal format
+-            new_messages = []
+-            for msg in messages:
+-                prefix = "[USER]" if msg["role"] == "user" else "[ASSISTANT]"
+-                new_messages.extend([{"type": "text", "text": prefix + " " + part} for part in msg["content"]])
+-            messages = new_messages
++            messages = openai_messages_to_content_parts(messages, include_non_text=False)
+ 
+         temporary_messages = convert_message_to_mirix_message(messages)
+         temporary_messages = [
+@@ -517,6 +512,51 @@ async def extract_topics_and_temporal_info(
+     return None, None
+ 
+ 
++def openai_messages_to_content_parts(
++    messages: List[Dict[str, Any]],
++    *,
++    include_non_text: bool = True,
++) -> List[Dict[str, Any]]:
++    """Convert OpenAI chat messages to MIRIX content parts while preserving images when requested."""
++    if not messages or not isinstance(messages, list) or not isinstance(messages[0], dict) or "role" not in messages[0]:
++        return messages
++
++    converted: List[Dict[str, Any]] = []
++    for msg in messages:
++        prefix = "[USER]" if msg.get("role") == "user" else "[ASSISTANT]"
++        content = msg.get("content", "")
++        if isinstance(content, str):
++            converted.append({"type": "text", "text": prefix + " " + content})
++            continue
++
++        if not isinstance(content, list):
++            raise ValueError(f"Invalid content type: {type(content)}")
++
++        prefixed = False
++        for part in content:
++            if isinstance(part, str):
++                text = part
++                if not prefixed:
++                    text = prefix + " " + text
++                    prefixed = True
++                converted.append({"type": "text", "text": text})
++            elif isinstance(part, dict) and part.get("type") == "text":
++                updated = dict(part)
++                if not prefixed:
++                    updated["text"] = prefix + " " + str(updated.get("text", ""))
++                    prefixed = True
++                converted.append(updated)
++            elif isinstance(part, dict):
++                if include_non_text:
++                    if not prefixed:
++                        converted.append({"type": "text", "text": prefix})
++                        prefixed = True
++                    converted.append(copy.deepcopy(part))
++            else:
++                raise ValueError(f"Invalid content part type: {type(part)}")
++    return converted
++
++
+ async def extract_topics_from_messages(
+     messages: List[Dict[str, Any]], llm_config: LLMConfig
+ ) -> Optional[str]:
+@@ -2045,30 +2085,9 @@ async def add_memory(
+         user_id = ClientAuthManager.get_admin_user_id_for_client(client.id)
+         logger.debug("No user_id provided, using admin user: %s", user_id)
+ 
+-    message = request.messages
+-
+-    if isinstance(message, list) and "role" in message[0].keys():
+-        # This means the input is in the format of [{"role": "user", "content": [{"type": "text", "text": "..."}]}, {"role": "assistant", "content": [{"type": "text", "text": "..."}]}]
+-        # OR the simpler format: [{"role": "user", "content": "Hello world"}]
+-
+-        # We need to convert the message to the format in "content"
+-        new_message = []
+-        for msg in message:
+-            prefix = "[USER]" if msg["role"] == "user" else "[ASSISTANT]"
+-
+-            # Handle both string and list content
+-            content = msg["content"]
+-            if isinstance(content, str):
+-                # Content is a string - convert to proper format
+-                new_message.append({"type": "text", "text": prefix + " " + content})
+-            elif isinstance(content, list):
+-                # Content is already a list - extend as before
+-                new_message.extend([{"type": "text", "text": prefix + " " + part} for part in content])
+-            else:
+-                raise ValueError(f"Invalid content type: {type(content)}")
+-        message = new_message
++    message = openai_messages_to_content_parts(request.messages, include_non_text=True)
+ 
+-    input_messages = convert_message_to_mirix_message(message)
++    input_messages = convert_message_to_mirix_message(message, org_id=org_id)
+ 
+     # Add client scope to filter_tags (create if not provided)
+     if request.filter_tags is not None:
+@@ -2153,22 +2172,9 @@ async def add_memory_sync(
+ 
+         user_id = ClientAuthManager.get_admin_user_id_for_client(client.id)
+ 
+-    message = request.messages
+-
+-    if isinstance(message, list) and "role" in message[0].keys():
+-        new_message = []
+-        for msg in message:
+-            prefix = "[USER]" if msg["role"] == "user" else "[ASSISTANT]"
+-            content = msg["content"]
+-            if isinstance(content, str):
+-                new_message.append({"type": "text", "text": prefix + " " + content})
+-            elif isinstance(content, list):
+-                new_message.extend([{"type": "text", "text": prefix + " " + part} for part in content])
+-            else:
+-                raise ValueError(f"Invalid content type: {type(content)}")
+-        message = new_message
++    message = openai_messages_to_content_parts(request.messages, include_non_text=True)
+ 
+-    input_messages = convert_message_to_mirix_message(message)
++    input_messages = convert_message_to_mirix_message(message, org_id=org_id)
+ 
+     if request.filter_tags is not None:
+         filter_tags = dict(request.filter_tags)
+diff --git a/mirix/utils.py b/mirix/utils.py
+index 33a2809..7605d6f 100755
+--- a/mirix/utils.py
++++ b/mirix/utils.py
+@@ -15,6 +15,7 @@ import re
+ import shutil
+ import string
+ import sys
++import threading
+ import uuid
+ import warnings
+ from contextlib import contextmanager
+@@ -80,6 +81,32 @@ if "LOG_LEVEL" in os.environ:
+     if os.environ["LOG_LEVEL"] == "DEBUG":
+         DEBUG = True
+ 
++
++def _run_async_sync(coro):
++    """Run an async helper from MIRIX's sync message conversion path."""
++    try:
++        loop = asyncio.get_running_loop()
++    except RuntimeError:
++        return asyncio.run(coro)
++
++    if not loop.is_running():
++        return loop.run_until_complete(coro)
++
++    result: dict[str, Any] = {}
++
++    def runner() -> None:
++        try:
++            result["value"] = asyncio.run(coro)
++        except BaseException as error:
++            result["error"] = error
++
++    thread = threading.Thread(target=runner)
++    thread.start()
++    thread.join()
++    if "error" in result:
++        raise result["error"]
++    return result.get("value")
++
+ # Thread-safe verbose flag using contextvars (replaces global VERBOSE)
+ # Default value from environment variable
+ _default_verbose = True  # Default to True to show logs unless explicitly disabled
+@@ -1592,7 +1619,7 @@ def _save_image_from_base64(
+             with open(file_path, "wb") as f:
+                 f.write(image_data)
+ 
+-        return file_manager.create_file_metadata_from_path(file_path=str(file_path), organization_id=org_id)
++        return _run_async_sync(file_manager.create_file_metadata_from_path(file_path=str(file_path), organization_id=org_id))
+ 
+     except Exception as e:
+         raise ValueError(f"Failed to save base64 image: {str(e)}") from e
+@@ -1627,7 +1654,7 @@ async def _save_image_from_url(
+             with open(file_path, "wb") as f:
+                 f.write(image_data)
+ 
+-        return file_manager.create_file_metadata_from_path(file_path=str(file_path), organization_id=org_id)
++        return await file_manager.create_file_metadata_from_path(file_path=str(file_path), organization_id=org_id)
+ 
+     except Exception as e:
+         raise ValueError(f"Failed to download and save image from URL {url}: {str(e)}") from e
+@@ -1662,7 +1689,7 @@ def _save_image_from_file_uri(
+         if not file_path.exists():
+             shutil.copy2(source_path, file_path)
+ 
+-        return file_manager.create_file_metadata_from_path(file_path=str(file_path), organization_id=org_id)
++        return _run_async_sync(file_manager.create_file_metadata_from_path(file_path=str(file_path), organization_id=org_id))
+ 
+     except Exception as e:
+         raise ValueError(f"Failed to copy image from file URI {file_uri}: {str(e)}") from e
+@@ -1689,7 +1716,7 @@ def _save_image_from_google_cloud_uri(cloud_uri: str, file_manager: "FileManager
+     }
+     file_type = file_type_map.get(file_extension, "image/jpeg")
+ 
+-    return file_manager.create_file_metadata(
++    return _run_async_sync(file_manager.create_file_metadata(
+         FileMetadata(
+             organization_id=org_id,
+             file_name=file_name,
+@@ -1701,7 +1728,7 @@ def _save_image_from_google_cloud_uri(cloud_uri: str, file_manager: "FileManager
+             file_creation_date=None,
+             file_last_modified_date=None,
+         )
+-    )
++    ))
+ 
+ 
+ def _save_file_from_path(file_path: str, file_manager: "FileManager", org_id: str) -> FileMetadata:
+@@ -1712,7 +1739,7 @@ def _save_file_from_path(file_path: str, file_manager: "FileManager", org_id: st
+         if not file_path_obj.exists():
+             raise FileNotFoundError(f"File not found: {file_path}")
+ 
+-        return file_manager.create_file_metadata_from_path(file_path=str(file_path_obj), organization_id=org_id)
++        return _run_async_sync(file_manager.create_file_metadata_from_path(file_path=str(file_path_obj), organization_id=org_id))
+ 
+     except Exception as e:
+         raise ValueError(f"Failed to save file from path {file_path}: {str(e)}") from e
+@@ -1777,7 +1804,7 @@ def _create_file_metadata_from_url(
+         }
+         file_type = file_type_map.get(file_extension, "image/jpeg")
+ 
+-        return file_manager.create_file_metadata(
++        return _run_async_sync(file_manager.create_file_metadata(
+             FileMetadata(
+                 organization_id=org_id,
+                 file_name=file_name,
+@@ -1788,7 +1815,7 @@ def _create_file_metadata_from_url(
+                 file_creation_date=None,
+                 file_last_modified_date=None,
+             )
+-        )
++        ))
+ 
+     except Exception as e:
+         raise ValueError(f"Failed to create file metadata from URL {url}: {str(e)}") from e

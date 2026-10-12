@@ -1,0 +1,19 @@
+{
+  "metadata": {
+    "schema_version": 1,
+    "generator_model": "Qwen/Qwen3.5-35B-A3B",
+    "generator_revision": "provider-pinned-main-evaluation",
+    "prompt_fingerprint": "SHA256_OF_THE_THREE_CAPTION_PROMPTS",
+    "complete": true
+  },
+  "items": {
+    "images/example_task/0.jpg": {
+      "status": "ok",
+      "caption": "A detailed, frozen description of the media."
+    },
+    "videos/example_task/0.mp4": {
+      "status": "ok",
+      "caption": "A chronological description of the video."
+    }
+  }
+}

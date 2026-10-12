@@ -1,0 +1,425 @@
+{
+  "protocol_version": "3.0",
+  "dataset": {
+    "name": "Beyond Recall",
+    "expected_trajectories": 1163,
+    "expected_questions": 1269,
+    "expected_sessions": 23775,
+    "dimensions": [
+      "retrieval",
+      "reasoning",
+      "management"
+    ],
+    "task_count": 11,
+    "target_person_rule": "persons[0]"
+  },
+  "protocol": {
+    "random_seed": 42,
+    "chronological_ingestion": true,
+    "state_isolation": "one fresh system instance per question",
+    "parallelism_unit": "question_with_isolated_namespace",
+    "default_workers": 1,
+    "inference_and_judging": "separate immutable stages",
+    "strict_error_policy": "execution, media, API, empty-answer, and judge-parsing failures count as incorrect",
+    "primary_metric": "strict_micro_accuracy",
+    "secondary_metrics": [
+      "task_macro_accuracy",
+      "dimension_accuracy",
+      "task_accuracy",
+      "Wilson 95% confidence interval",
+      "Any-Hit@K when private evidence annotations are available",
+      "CESA@K when private evidence annotations are available",
+      "Accuracy given CESA when private evidence annotations are available"
+    ],
+    "persist_adapter_diagnostics": true,
+    "reference_answers_visible_to_system": false,
+    "task_labels_visible_to_system": false,
+    "evidence_annotations_visible_to_system": false,
+    "source_identifiers_visible_to_system": false,
+    "timestamp_policy": "inclusive history cutoff before any ingestion; chronological UTC-normalized order"
+  },
+  "models": {
+    "answer": {
+      "model": "Qwen/Qwen3.5-9B",
+      "revision": "provider-pinned-main-evaluation",
+      "revision_env": "BEYOND_RECALL_ANSWER_REVISION",
+      "chat_template_revision": "provider-pinned-main-evaluation",
+      "api_key_env": "BR_API_KEY",
+      "base_url_env": "BR_API_BASE_URL",
+      "temperature": 0,
+      "enable_thinking": false,
+      "max_tokens": 1024,
+      "timeout_seconds": 300,
+      "max_retries": 2,
+      "backend": "api",
+      "visual_transport": "all_frames_lossless_tiles",
+      "visual_tile_size": 896,
+      "visual_padding_factor": 224,
+      "visual_minimum_side": 224,
+      "require_verified_processing": false,
+      "provider_processing_report": null
+    },
+    "memory_extraction_and_evolution": {
+      "model": "Qwen/Qwen3.5-35B-A3B",
+      "revision": "provider-pinned-main-evaluation",
+      "revision_env": "BEYOND_RECALL_MEMORY_REVISION",
+      "chat_template_revision": "provider-pinned-main-evaluation",
+      "api_key_env": "BEYOND_RECALL_MEMORY_API_KEY",
+      "base_url_env": "BEYOND_RECALL_MEMORY_BASE_URL",
+      "temperature": 0,
+      "enable_thinking": false,
+      "max_tokens": 2048,
+      "timeout_seconds": 300,
+      "max_retries": 6
+    },
+    "caption": {
+      "model": "Qwen/Qwen3.5-35B-A3B",
+      "revision": "provider-pinned-main-evaluation",
+      "revision_env": "BEYOND_RECALL_CAPTION_REVISION",
+      "chat_template_revision": "provider-pinned-main-evaluation",
+      "api_key_env": "BEYOND_RECALL_CAPTION_API_KEY",
+      "base_url_env": "BEYOND_RECALL_CAPTION_BASE_URL",
+      "temperature": 0,
+      "enable_thinking": false,
+      "max_tokens": 1024,
+      "timeout_seconds": 300,
+      "max_retries": 6,
+      "shared_frozen_cache": true
+    },
+    "judge": {
+      "model": "Qwen/Qwen3.5-122B-A10B",
+      "revision": "provider-pinned-main-evaluation",
+      "revision_env": "BEYOND_RECALL_JUDGE_REVISION",
+      "chat_template_revision": "provider-pinned-main-evaluation",
+      "api_key_env": "BR_JUDGE_API_KEY",
+      "base_url_env": "BR_JUDGE_BASE_URL",
+      "temperature": 0,
+      "max_tokens": 512,
+      "timeout_seconds": 180,
+      "max_retries": 2,
+      "retry_base_delay_seconds": 5,
+      "backend": "api"
+    },
+    "text_embedding": {
+      "model": "BAAI/bge-small-en-v1.5",
+      "revision": "pinned-local-snapshot",
+      "revision_env": "BEYOND_RECALL_TEXT_EMBED_REVISION",
+      "dimension": 384,
+      "pooling": "model-default-cls",
+      "normalize": true,
+      "query_instruction": "",
+      "maximum_tokens": 512,
+      "distance": "cosine"
+    },
+    "multimodal_embedding": {
+      "model": "Qwen/Qwen3-VL-Embedding-8B",
+      "revision": "provider-pinned-main-evaluation",
+      "revision_env": "BEYOND_RECALL_MM_EMBED_REVISION",
+      "dimension": 1024,
+      "normalize": true,
+      "maximum_tokens": 32768,
+      "distance": "cosine"
+    }
+  },
+  "media_processing": {
+    "quality": {
+      "pdf_render_dpi": 300,
+      "native_file_types": [],
+      "video_transport": "unsupported",
+      "spreadsheet_mode": "complete_xml_and_render"
+    },
+    "image": {
+      "preserve_source_bytes": true,
+      "resize": false
+    },
+    "pdf": {
+      "all_pages": true,
+      "render_dpi": 300,
+      "include_all_text": true
+    },
+    "video": {
+      "sampling": false,
+      "preserve_audio": true,
+      "unsupported_backend_action": "error"
+    },
+    "capacity_policy": "fail explicitly; no shrink, truncation, omission or frame sampling"
+  },
+  "retrieval_defaults": {
+    "unit": "session",
+    "final_top_k": 10,
+    "dense_candidates": 10,
+    "lexical_candidates": 10,
+    "hybrid_fusion": "reciprocal_rank_fusion",
+    "rrf_k": 60,
+    "deduplication_key": "opaque_session_unit_id",
+    "bm25": {
+      "tokenizer": "lowercase_ascii_alphanumeric",
+      "k1": 1.5,
+      "b": 0.75
+    }
+  },
+  "prompts": {
+    "answer": "Answer the question using only the supplied conversation history, retrieved sessions, or explicit memories. If the available information is insufficient, state that it cannot be determined. Give a concise answer.",
+    "image_caption": "Objectively describe visible entities, attributes, states, readable text, chart values, and spatial relationships useful for later memory question answering. Do not invent information.",
+    "video_caption": "Describe the video in chronological order. Preserve observable people, objects, locations, actions, counts, state changes, intent cues, and temporal order. Distinguish uncertainty from observed facts.",
+    "pdf_caption": "Describe the supplied PDF pages with page numbers. Preserve headings, table and chart values, entities, relations, and details needed for later question answering.",
+    "history_serialization": "Chronological sessions with timestamps and speaker turns; preserve each media reference, attach complete assets once within selected evidence.",
+    "answer_message_roles": [
+      "system: fixed benchmark answering instruction",
+      "user: serialized history or retrieved memory followed by the question"
+    ]
+  },
+  "judge_rubrics": {
+    "default": "The key factual content must agree with the reference answer. Additional non-contradictory explanation is allowed.",
+    "high_density_information_extraction": "All values, entities, comparisons, and requested list items needed by the question must be correct.",
+    "long_term_semantic_summary": "The response must preserve the reference conclusion and the central long-term pattern; minor wording differences are allowed.",
+    "conflict_detection": "The response must identify the relevant incompatibility or contradiction and reach the reference decision.",
+    "refusal_to_answer": "The response must abstain when the reference indicates insufficient evidence and must not invent an answer."
+  },
+  "method_profiles": {
+    "full_context_caption": {
+      "family": "full_context",
+      "input_mode": "caption",
+      "history_scope": "all_sessions",
+      "caption_error": "fail",
+      "retrieval_top_k": null,
+      "access_reporting": "all serialized session and turn units",
+      "implementation": "full_context",
+      "implementation_status": "builtin"
+    },
+    "full_context_multimodal": {
+      "family": "full_context",
+      "input_mode": "native",
+      "history_scope": "all_sessions",
+      "caption_error": "fail",
+      "retrieval_top_k": null,
+      "media_selection": "query_media_then_chronological_without_gold",
+      "access_reporting": "successfully delivered raw media and serialized session units",
+      "implementation": "full_context",
+      "implementation_status": "builtin"
+    },
+    "rag_dense": {
+      "family": "retrieval",
+      "input_mode": "caption",
+      "history_scope": "all_sessions",
+      "caption_error": "fail",
+      "retrieval_unit": "session",
+      "retrieval_top_k": 10,
+      "retriever": "dense",
+      "embedding_role": "text_embedding",
+      "access_reporting": "all units contained in returned sessions",
+      "implementation": "dense_rag",
+      "implementation_status": "builtin"
+    },
+    "rag_hybrid": {
+      "family": "retrieval",
+      "input_mode": "caption",
+      "history_scope": "all_sessions",
+      "caption_error": "fail",
+      "retrieval_unit": "session",
+      "retrieval_top_k": 10,
+      "retriever": "dense_plus_bm25",
+      "fusion": "reciprocal_rank_fusion",
+      "access_reporting": "all units contained in returned sessions",
+      "implementation": "dense_rag",
+      "embedding_role": "text_embedding",
+      "implementation_status": "builtin"
+    },
+    "multimodal_rag": {
+      "family": "retrieval",
+      "input_mode": "native",
+      "history_scope": "all_sessions",
+      "caption_error": "fail",
+      "retrieval_unit": "session_and_media",
+      "retrieval_top_k": 10,
+      "text_embedding_role": "text_embedding",
+      "visual_embedding_role": "multimodal_embedding",
+      "fusion": "reciprocal_rank_fusion",
+      "media_selection": "retrieval_score_without_gold",
+      "access_reporting": "returned sessions and successfully delivered raw media",
+      "implementation_status": "external_adapter_required",
+      "implementation_note": "Protocol profile only. Supply a real external adapter through --adapter-file; the built-in adapter cannot run this profile."
+    },
+    "mem0_agentic": {
+      "family": "explicit_memory",
+      "input_mode": "caption",
+      "history_scope": "all_sessions",
+      "caption_error": "fail",
+      "memory_owner": "target_person",
+      "memory_write_unit": "session",
+      "session_chunk_size": 1,
+      "retrieval_top_k": 10,
+      "memory_model_role": "memory_extraction_and_evolution",
+      "access_reporting": "source units retained in retrieved memory metadata",
+      "implementation_status": "builtin",
+      "implementation_note": "Legacy non-graph Mem0-A SDK 1.0.6 with fact extraction and action-based memory consolidation.",
+      "implementation": "mem0_agentic",
+      "sdk_variant": "legacy_non_graph",
+      "framework_config": {
+        "llm": {
+          "provider": "openai",
+          "config": {
+            "model": "Qwen/Qwen3.5-35B-A3B",
+            "api_key_env": "BEYOND_RECALL_MEMORY_API_KEY",
+            "openai_base_url_env": "BR_FRAME_MEMORY_SDK_URL",
+            "temperature": 0.1,
+            "top_p": 0.1,
+            "max_tokens": 2000
+          }
+        },
+        "embedder": {
+          "provider": "fastembed",
+          "config": {
+            "model": "BAAI/bge-small-en-v1.5",
+            "embedding_dims": 384
+          }
+        },
+        "vector_store": {
+          "provider": "qdrant",
+          "config": {
+            "embedding_model_dims": 384,
+            "on_disk": true
+          }
+        }
+      }
+    },
+    "mem0_oss": {
+      "family": "explicit_memory",
+      "input_mode": "caption",
+      "history_scope": "all_sessions",
+      "caption_error": "fail",
+      "memory_owner": "target_person",
+      "memory_write_unit": "session",
+      "session_chunk_size": 1,
+      "retrieval_top_k": 10,
+      "memory_model_role": "memory_extraction_and_evolution",
+      "access_reporting": "source units retained in retrieved memory metadata",
+      "implementation": "mem0_oss",
+      "implementation_status": "builtin",
+      "sdk_variant": "oss_mainline",
+      "implementation_note": "Newer Mem0-O mainline SDK 2.0.2 with additive extraction and entity/lexical/vector retrieval.",
+      "framework_config": {
+        "llm": {
+          "provider": "openai",
+          "config": {
+            "model": "Qwen/Qwen3.5-35B-A3B",
+            "api_key_env": "BEYOND_RECALL_MEMORY_API_KEY",
+            "openai_base_url_env": "BR_FRAME_MEMORY_SDK_URL",
+            "temperature": 0.1,
+            "top_p": 0.1,
+            "max_tokens": 2000
+          }
+        },
+        "embedder": {
+          "provider": "fastembed",
+          "config": {
+            "model": "BAAI/bge-small-en-v1.5",
+            "embedding_dims": 384
+          }
+        },
+        "vector_store": {
+          "provider": "qdrant",
+          "config": {
+            "embedding_model_dims": 384,
+            "on_disk": true
+          }
+        }
+      }
+    },
+    "amem": {
+      "family": "explicit_memory",
+      "input_mode": "caption",
+      "history_scope": "all_sessions",
+      "caption_error": "fail",
+      "memory_owner": "trajectory",
+      "memory_write_unit": "session_note",
+      "session_chunk_size": 1,
+      "retrieval_top_k": 8,
+      "memory_model_role": "memory_extraction_and_evolution",
+      "access_reporting": "source units retained in retrieved note metadata",
+      "implementation": "amem_caption",
+      "framework_config": {
+        "embedding_model": "all-MiniLM-L6-v2",
+        "metadata_mode": "simple",
+        "evolution_mode": "llm"
+      },
+      "implementation_status": "builtin"
+    },
+    "mirix": {
+      "family": "explicit_memory",
+      "input_mode": "native",
+      "history_scope": "all_sessions",
+      "caption_error": "fail",
+      "memory_owner": "target_person",
+      "memory_write_unit": "session",
+      "session_chunk_size": 1,
+      "retrieval_top_k": 120,
+      "memory_model_role": "memory_extraction_and_evolution",
+      "access_reporting": "source units retained in retrieved memory metadata",
+      "implementation": "mirix_native",
+      "framework_config": {
+        "retrieval_limit_per_type": 10
+      },
+      "implementation_status": "builtin"
+    },
+    "oracle_caption": {
+      "family": "oracle",
+      "input_mode": "caption",
+      "history_scope": "private_annotated_evidence_only",
+      "caption_error": "fail",
+      "retrieval_top_k": null,
+      "requires_private_evidence_manifest": true,
+      "gold_dependent_selection": true,
+      "implementation_status": "external_adapter_required",
+      "implementation_note": "Protocol profile only. Supply a real external adapter through --adapter-file; the built-in adapter cannot run this profile."
+    },
+    "oracle_multimodal": {
+      "family": "oracle",
+      "input_mode": "native",
+      "history_scope": "private_annotated_evidence_only",
+      "caption_error": "fail",
+      "retrieval_top_k": null,
+      "requires_private_evidence_manifest": true,
+      "gold_dependent_selection": true,
+      "implementation_status": "external_adapter_required",
+      "implementation_note": "Protocol profile only. Supply a real external adapter through --adapter-file; the built-in adapter cannot run this profile."
+    },
+    "text_only_shortcut": {
+      "family": "control",
+      "input_mode": "text_only",
+      "history_scope": "all_sessions",
+      "retrieval_top_k": null,
+      "implementation_status": "external_adapter_required",
+      "implementation_note": "Protocol profile only. Supply a real external adapter through --adapter-file; the built-in adapter cannot run this profile."
+    },
+    "question_only": {
+      "family": "control",
+      "input_mode": "text_only",
+      "history_scope": "question_only",
+      "retrieval_top_k": null,
+      "implementation_status": "external_adapter_required",
+      "implementation_note": "Protocol profile only. Supply a real external adapter through --adapter-file; the built-in adapter cannot run this profile."
+    },
+    "rag_bm25_native": {
+      "family": "retrieval",
+      "implementation": "bm25",
+      "input_mode": "native",
+      "history_scope": "all_sessions",
+      "retrieval_unit": "session",
+      "retrieval_top_k": 10,
+      "caption_error": "fail",
+      "implementation_status": "builtin"
+    },
+    "rag_bm25_caption": {
+      "family": "retrieval",
+      "implementation": "bm25",
+      "input_mode": "caption",
+      "history_scope": "all_sessions",
+      "retrieval_unit": "session",
+      "retrieval_top_k": 10,
+      "caption_error": "fail",
+      "implementation_status": "builtin"
+    }
+  },
+  "validation_scope": "engineering configuration; no measured model accuracy or judge agreement claimed"
+}
